@@ -1,96 +1,151 @@
-Claro! Aqui está um README que resume o que discutimos até agora e explica o projeto:
+# Desafio Tech DataOps
 
----
+Este projeto é parte de um desafio técnico para capturar e cruzar informações de empresas, estruturá-las em um banco de dados NoSQL (MongoDB) e disponibilizá-las via uma API usando Ruby on Rails.
 
-# Projeto de Desafio Técnico DataOps
+## Estrutura do Projeto
 
-## Visão Geral
-
-Este projeto tem como objetivo desenvolver uma aplicação para captura, cruzamento e disponibilização de informações de empresas utilizando tecnologias como Ruby on Rails, MongoDB, Elasticsearch e Docker. O foco principal é criar uma infraestrutura que permita o enriquecimento de dados de CNPJs e a exposição desses dados via API.
-
-## Tecnologias Utilizadas
-
-- **Ruby on Rails**: Framework web para construção da aplicação back-end.
-- **MongoDB**: Banco de dados NoSQL para armazenamento dos dados das empresas.
-- **Elasticsearch**: Motor de busca e análise de dados utilizado para indexação e pesquisa avançada.
-- **Docker**: Plataforma de conteinerização para facilitar o desenvolvimento, implantação e execução do ambiente de desenvolvimento.
-- **Ruby**: Linguagem de programação utilizada no desenvolvimento da lógica de negócios e manipulação de dados.
+- **Ruby on Rails:** Framework principal para desenvolvimento da aplicação.
+- **MongoDB:** Banco de dados NoSQL para armazenamento de dados.
+- **Elasticsearch:** Utilizado para busca eficiente e indexação de dados.
+- **Docker:** Ferramenta de containerização para facilitar a configuração e execução do ambiente de desenvolvimento.
+- **Mongoid:** ORM (Object-Relational Mapping) utilizado para integração com o MongoDB.
 
 ## Configuração do Ambiente
 
-1. **Clone o Repositório:**
+### Pré-requisitos
+
+Certifique-se de ter Docker e Docker Compose instalados em sua máquina:
+
+- Docker: [Instalação do Docker](https://docs.docker.com/get-docker/)
+- Docker Compose: [Instalação do Docker Compose](https://docs.docker.com/compose/install/)
+
+### Passos para Configuração
+
+1. **Clone o repositório:**
 
    ```bash
-   git clone <url-do-seu-repositorio>
-   cd <nome-do-seu-repositorio>
+   git clone git@github.com:GustavoGarciaPereira/desafio_tecnico.git
+   cd desafio_tecnico
    ```
 
-2. **Configuração do Docker Compose:**
+2. **Estrutura do Docker Compose:**
 
-   O arquivo `docker-compose.yml` contém a configuração dos serviços necessários (Rails, MongoDB, Elasticsearch).
+   Certifique-se de que os arquivos `docker-compose.yml` para MongoDB e Elasticsearch estejam configurados corretamente.
 
-   Exemplo de `docker-compose.yml`:
+### Scripts de Inicialização
 
-   ```yaml
-   version: '3'
-   services:
-     app:
-       build:
-         context: .
-         dockerfile: Dockerfile
-       depends_on:
-         - db
-         - elasticsearch
-       ports:
-         - "3000:3000"
-       volumes:
-         - .:/app
-     db:
-       image: mongo:latest
-       environment:
-         MONGO_INITDB_ROOT_USERNAME: adminUser
-         MONGO_INITDB_ROOT_PASSWORD: adminPassword
-       ports:
-         - "27017:27017"
-       volumes:
-         - mongo-data:/data/db
-     elasticsearch:
-       image: docker.elastic.co/elasticsearch/elasticsearch:7.15.1
-       environment:
-         - discovery.type=single-node
-       ports:
-         - "9200:9200"
-   ```
+Existem dois scripts bash para facilitar o gerenciamento dos serviços do MongoDB e Elasticsearch:
 
-3. **Construção e Inicialização do Ambiente:**
+#### Script `start_services.sh`
 
-   ```bash
-   docker-compose up --build
-   ```
+Este script inicializa os serviços do MongoDB e Elasticsearch, executa as tarefas do Rails e inicia o servidor Rails.
 
-4. **Execução de Comandos Rails:**
+```bash
+#!/bin/bash
 
-   Para executar comandos do Rails dentro do container:
+# Entrar na pasta do MongoDB
+echo "Entrando na pasta do MongoDB..."
+cd mongo/
 
-   ```bash
-   docker-compose run app rails <comando-do-rails>
-   ```
+# Rodar docker-compose up --build
+echo "Iniciando MongoDB..."
+docker-compose up --build -d
+cd ..
 
-5. **Testar a Aplicação:**
+# Sair da pasta do MongoDB
+echo "Saindo da pasta do MongoDB..."
 
-   Abra o navegador e acesse `http://localhost:3000` para acessar a aplicação Ruby on Rails.
-   Abra o navegador e acesse`http://localhost:3000/search?name=exemplo`para acessar a aplicação Ruby on Rails.
-   Abra o navegador e acesse`http://localhost:3000/search`para acessar a aplicação Ruby on Rails.
+# Entrar na pasta do Elasticsearch
+echo "Entrando na pasta do Elasticsearch..."
+cd elasticsearch/
 
-## Funcionalidades Implementadas
+# Rodar docker-compose up --build
+echo "Iniciando Elasticsearch..."
+docker-compose up --build -d
+cd ..
 
-- **Captura de Dados**: Integração com API de enriquecimento de CNPJs para captura de informações básicas das empresas.
-- **Armazenamento e Indexação**: Utilização do MongoDB para armazenar os dados e Elasticsearch para indexação e pesquisa avançada.
-- **Exposição via API**: Desenvolvimento de endpoints para acesso aos dados enriquecidos via API RESTful.
-- **Integração de Serviços**: Uso de Docker Compose para facilitar a integração e execução dos serviços necessários.
+# Sair da pasta do Elasticsearch
+echo "Saindo da pasta do Elasticsearch..."
 
-Este projeto está em constante evolução e adaptação às necessidades específicas do desafio técnico DataOps, focando em eficiência na manipulação e disponibilização de dados de empresas brasileiras.
+# Executar comandos Rails
+echo "Executando comandos Rails..."
+rails cnpjs:capture  
+rails cnpjs:enrich_basic 
+rails cnpjs:enrich_advanced 
 
----
+# Iniciar servidor Rails
+clear
+echo "Iniciando servidor Rails..."
+echo "http://localhost:3000/search"
+echo "http://localhost:3000/search?name=exemplo"
+rails server
+```
 
-Personalize o README com mais detalhes específicos conforme o desenvolvimento do projeto avança e novas funcionalidades são implementadas.
+#### Script `down_services.sh`
+
+Este script encerra os serviços do MongoDB e Elasticsearch.
+
+```bash
+#!/bin/bash
+
+# Entrar na pasta do MongoDB
+cd mongo/
+
+# Rodar docker-compose down -v
+docker-compose down -v
+cd ..
+# Sair da pasta do MongoDB
+cd elasticsearch/
+docker-compose down -v
+cd ..
+```
+
+### Executando os Scripts
+
+Para iniciar os serviços e o servidor Rails, execute:
+
+```bash
+./start_services.sh
+```
+
+Para encerrar os serviços, execute:
+
+```bash
+./down_services.sh
+```
+
+## Tarefas Automatizadas
+
+### Enriquecimento de CNPJs
+
+Um dos objetivos do projeto é enriquecer dados de CNPJs com informações adicionais. Para isso, criamos uma tarefa Rake:
+
+```ruby
+namespace :cnpjs do
+  desc "Enriquece CNPJs com informações básicas"
+  task enrich_basic: :environment do
+    Cnpj.all.each do |cnpj|
+      details = CnpjEnrichmentService.enrich(cnpj.value)
+      cnpj.update(details)
+      puts "Enriched CNPJ #{cnpj.value} with basic details."
+    end
+  end
+end
+```
+
+
+## Conclusão
+
+Este projeto demonstra a integração de Ruby on Rails com MongoDB e Elasticsearch utilizando Docker para simplificar a configuração e execução do ambiente de desenvolvimento. A tarefa de enriquecimento de CNPJs é um exemplo de como automatizar processos dentro da aplicação.
+
+Para mais informações e detalhes sobre o projeto, consulte a documentação completa no repositório.
+
+
+
+----------
+Considerações 
+em vez de usar http://cnpj.info/busca para conseguir os cnpj's eu usei
+https://www.idinheiro.com.br/investimentos/cnpj-empresas-listadas-b
+
+
+a parte do elasticsearch não esta funcionando 100%, não consegui integrar 100%
